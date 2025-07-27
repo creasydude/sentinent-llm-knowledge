@@ -2,6 +2,9 @@
 
 This project is a web application designed for collecting user-generated knowledge (Datasets) to train a Large Language Model (LLM). It features a Nest.js backend and a Next.js (React) frontend, with user authentication via OTP, a points system, and integration with an LLM API for question generation.
 
+## DEMO
+https://github.com/user-attachments/assets/5e479102-a1ef-4305-87ad-d58c45029176
+
 ## Project Structure
 
 The project is organized into two main directories:
