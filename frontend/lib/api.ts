@@ -59,6 +59,6 @@ export const exportAnswers = async () => {
   return api.get("/admin/datasets/export", { responseType: "blob" });
 };
 
-export const createQuestion = async (text: string, topic: string) => {
-  return api.post("/admin/questions", { text, topic });
+export const createQuestion = async (topic: string) => {
+  return api.post("/questions/generate", { topic });
 };

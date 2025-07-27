@@ -1,6 +1,6 @@
-# LLM Knowledge Collector App
+# LLM Knowledge Collector App For Sentinent
 
-This project is a web application designed for collecting user-generated knowledge to train a Large Language Model (LLM). It features a Nest.js backend and a Next.js (React) frontend, with user authentication via OTP, a points system, and integration with an LLM API for question generation.
+This project is a web application designed for collecting user-generated knowledge (Datasets) to train a Large Language Model (LLM). It features a Nest.js backend and a Next.js (React) frontend, with user authentication via OTP, a points system, and integration with an LLM API for question generation.
 
 ## Project Structure
 
@@ -34,7 +34,7 @@ The backend is built with Nest.js and provides the API endpoints for the fronten
 - TypeORM
 - SQLite
 - JWT for authentication
-- Google Gemini API (or similar LLM API)
+- LLM API (You Can Use Dobby API)
 
 ## Frontend (Next.js / React)
 
