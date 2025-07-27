@@ -88,8 +88,15 @@ Create a `.env` file in the `backend` directory and configure your LLM API key a
 Example `.env` for backend:
 
 ```
+PORT=YOUR_PORT
+JWT_SECRET=SOME_SECRET
 GEMINI_API_KEY=YOUR_GEMINI_API_KEY
-# Add other environment variables as needed, e.g., for email service
+# Email configuration for Nodemailer
+EMAIL_HOST=
+EMAIL_PORT=
+EMAIL_USER=
+EMAIL_PASS=
+
 ```
 
 ### 4. Running the Project
