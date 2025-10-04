@@ -63,7 +63,6 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ message: 'Static OTP generated for admin test user' }), { headers: { 'Content-Type': 'application/json' } });
   }
 
-  // reuse port/secure computed above
   try {
     let transporter: nodemailer.Transporter;
     if (useMailtrap) {
@@ -100,8 +99,13 @@ export async function POST(req: Request) {
       });
       await transporter.verify();
     }
+    const fromAddress = process.env.MAILTRAP_SENDER_EMAIL || process.env.EMAIL_FROM;
+    const fromName = process.env.MAILTRAP_SENDER_NAME || 'LLM-Knowledge';
+    if (useMailtrap && !fromAddress) {
+      throw new Error('MAILTRAP_SENDER_EMAIL not set');
+    }
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM || '"LLM-Knowledge" <smtp@plusking.ir>',
+      from: fromAddress ? { address: fromAddress, name: fromName } : (process.env.EMAIL_FROM || 'no-reply@example.com'),
       to: email,
       subject: 'Your OTP Code',
       text: `Your OTP code is: ${otp}`,
