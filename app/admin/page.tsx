@@ -18,10 +18,10 @@ import { getProfile, getUsers, getAnswers, validateAnswer, promoteUser, demoteUs
 
 interface Submission {
   id: string
-  question: string
-  answer: string
-  userEmail: string
-  status: "pending" | "validated"
+  text: string
+  question: { id: string; text: string; topic: string } | null
+  userEmail: string | null
+  isGoodAnswer: boolean
 }
 
 interface UserData {
@@ -206,7 +206,7 @@ export default function AdminPanel() {
                             {submission.text}
                           </p>
                         </TableCell>
-                        <TableCell>{submission.user.email}</TableCell>
+                        <TableCell>{submission.userEmail ?? "-"}</TableCell>
                         <TableCell>
                           <Badge
                             variant={submission.isGoodAnswer ? "default" : "secondary"}

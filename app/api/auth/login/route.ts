@@ -1,4 +1,6 @@
 import { getDataSource } from '@/lib/db';
+import { getPgPool, ensureSchema } from '@/lib/pg';
+import { randomUUID } from 'crypto';
 import { UserSchema as User } from '@/server/schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 import nodemailer from 'nodemailer';
@@ -13,12 +15,26 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ message: 'Invalid email' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
   }
 
-  const ds = await getDataSource();
-  const userRepo = ds.getRepository(User);
-
-  let user = await userRepo.findOne({ where: { email } });
-  if (!user) {
-    user = userRepo.create({ email });
+  let user: any;
+  if (process.env.DATABASE_URL) {
+    const pg = getPgPool();
+    await ensureSchema();
+    // Upsert user by email
+    const { rows } = await pg.query('SELECT * FROM "user" WHERE email=$1', [email]);
+    if (rows.length) {
+      user = rows[0];
+    } else {
+      const id = randomUUID();
+      const { rows: created } = await pg.query('INSERT INTO "user" (id, email) VALUES ($1, $2) RETURNING *', [id, email]);
+      user = created[0];
+    }
+  } else {
+    const ds = await getDataSource();
+    const userRepo = ds.getRepository(User);
+    user = await userRepo.findOne({ where: { email } });
+    if (!user) {
+      user = userRepo.create({ email });
+    }
   }
 
   const staticAdminEmail = process.env.ADMIN_TEST_EMAIL;
@@ -26,9 +42,17 @@ export async function POST(req: Request) {
   const isStaticAdmin = staticAdminEmail && staticAdminOtp && email.toLowerCase() === staticAdminEmail.toLowerCase();
   const otp = isStaticAdmin ? staticAdminOtp : generateOtp();
   const hashed = await bcrypt.hash(otp, 10);
-  user.otp = hashed;
-  user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
-  await userRepo.save(user);
+  const expires = new Date(Date.now() + 10 * 60 * 1000);
+  if (process.env.DATABASE_URL) {
+    const pg = getPgPool();
+    await pg.query('UPDATE "user" SET otp=$1, otp_expires_at=$2 WHERE email=$3', [hashed, expires, email]);
+  } else {
+    const ds = await getDataSource();
+    const userRepo = ds.getRepository(User);
+    user.otp = hashed;
+    user.otpExpiresAt = expires;
+    await userRepo.save(user);
+  }
 
   const port = Number(process.env.EMAIL_PORT || '587');
   const secure = (process.env.EMAIL_SECURE || '').toLowerCase() === 'true';

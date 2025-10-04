@@ -33,6 +33,9 @@ function buildDataSource() {
 }
 
 export async function getDataSource(): Promise<DataSource> {
+  if (process.env.DATABASE_URL) {
+    throw new Error('TypeORM disabled in production. Use pg client instead.');
+  }
   if (global.__datasource) {
     if (!global.__datasource.isInitialized) {
       await global.__datasource.initialize();

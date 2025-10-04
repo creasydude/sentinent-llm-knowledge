@@ -1,5 +1,4 @@
-import { getDataSource } from '@/lib/db';
-import { UserSchema as User } from '@/server/schemas/user.schema';
+import { getPgPool } from '@/lib/pg';
 import jwt from 'jsonwebtoken';
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
@@ -13,8 +12,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   }
   if (!payload.isAdmin) return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
-  const ds = await getDataSource();
-  const repo = ds.getRepository(User);
-  await repo.update(params.id, { isAdmin: false });
+  const pg = getPgPool();
+  await pg.query('UPDATE "user" SET is_admin=false WHERE id=$1', [params.id]);
   return new Response(JSON.stringify({ message: 'User demoted' }), { headers: { 'Content-Type': 'application/json' } });
 }
