@@ -48,6 +48,8 @@ ADMIN_TEST_OTP=example_otp_here
 ADMIN_TEST_SKIP_EMAIL=true_or_false_here
 NEXT_PUBLIC_ADMIN_TEST_EMAIL=admin_email@example.com
 NEXT_PUBLIC_ADMIN_TEST_OTP=example_otp_here
+DATABASE_SSL=true
+DATABASE_URL=postgresql://user:password@localhost:5432/mydatabase
 ```
 ## Contributing
 
