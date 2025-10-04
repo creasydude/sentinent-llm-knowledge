@@ -19,12 +19,12 @@ export const UserSchema = new EntitySchema<User>({
     id: { type: 'uuid', primary: true, generated: 'uuid' },
     email: { type: String, unique: true },
     otp: { type: 'text', nullable: true },
-    otpExpiresAt: { type: 'datetime', nullable: true },
+    otpExpiresAt: { type: Date, nullable: true },
     points: { type: Number, default: 0 },
     dailyAnswerCount: { type: Number, default: 0 },
-    lastAnswerDate: { type: 'datetime', nullable: true },
+    lastAnswerDate: { type: Date, nullable: true },
     refreshToken: { type: 'text', nullable: true },
-    refreshTokenExpiresAt: { type: 'datetime', nullable: true },
+    refreshTokenExpiresAt: { type: Date, nullable: true },
     isAdmin: { type: Boolean, default: false },
   },
   relations: {
@@ -32,4 +32,3 @@ export const UserSchema = new EntitySchema<User>({
     pointsEarned: { type: 'one-to-many', target: 'Point', inverseSide: 'user' },
   },
 });
-
