@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { UserSchema as User } from '@/server/schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 import nodemailer from 'nodemailer';
+import { MailtrapTransport } from 'mailtrap';
 
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -54,26 +55,9 @@ export async function POST(req: Request) {
     await userRepo.save(user);
   }
 
-  const port = Number(process.env.EMAIL_PORT || '587');
-  const secure = (process.env.EMAIL_SECURE || '').toLowerCase() === 'true';
-  const requireTLS = (process.env.EMAIL_REQUIRE_TLS || 'true').toLowerCase() === 'true';
   const skipAdminEmail = (process.env.ADMIN_TEST_SKIP_EMAIL || 'true').toLowerCase() === 'true';
-  const allowSelfSigned = (process.env.EMAIL_ALLOW_SELF_SIGNED || 'false').toLowerCase() === 'true';
-  const connectionTimeout = Number(process.env.EMAIL_CONNECTION_TIMEOUT || '10000');
-  const socketTimeout = Number(process.env.EMAIL_SOCKET_TIMEOUT || '10000');
-  // Sanitize EMAIL_HOST in case a port was included (e.g., "host:465")
-  const rawHost = (process.env.EMAIL_HOST || '').trim();
-  let host = rawHost;
-  let hostPortFromHost: number | undefined = undefined;
-  const idx = rawHost.lastIndexOf(':');
-  if (idx > -1) {
-    const maybePort = rawHost.slice(idx + 1);
-    if (/^\d+$/.test(maybePort)) {
-      host = rawHost.slice(0, idx);
-      hostPortFromHost = Number(maybePort);
-    }
-  }
-  const effectivePort = hostPortFromHost ?? port;
+  const mailtrapToken = process.env.MAILTRAP_TOKEN;
+  const useMailtrap = (process.env.USE_MAILTRAP || (mailtrapToken ? 'true' : 'false')).toLowerCase() === 'true';
   if (isStaticAdmin && skipAdminEmail) {
     // Skip sending email for static admin to make testing easier
     return new Response(JSON.stringify({ message: 'Static OTP generated for admin test user' }), { headers: { 'Content-Type': 'application/json' } });
@@ -81,18 +65,41 @@ export async function POST(req: Request) {
 
   // reuse port/secure computed above
   try {
-    const transporter = nodemailer.createTransport({
-      host,
-      port: effectivePort,
-      secure,
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-      ...(secure ? {} : (requireTLS ? { requireTLS: true } : {})),
-      connectionTimeout,
-      socketTimeout,
-      tls: allowSelfSigned ? { rejectUnauthorized: false } : undefined,
-    });
-    // Fail fast if SMTP is unreachable
-    await transporter.verify();
+    let transporter: nodemailer.Transporter;
+    if (useMailtrap) {
+      if (!mailtrapToken) throw new Error('MAILTRAP_TOKEN not set');
+      transporter = nodemailer.createTransport(MailtrapTransport({ token: mailtrapToken }));
+    } else {
+      const port = Number(process.env.EMAIL_PORT || '587');
+      const secure = (process.env.EMAIL_SECURE || '').toLowerCase() === 'true';
+      const requireTLS = (process.env.EMAIL_REQUIRE_TLS || 'true').toLowerCase() === 'true';
+      const allowSelfSigned = (process.env.EMAIL_ALLOW_SELF_SIGNED || 'false').toLowerCase() === 'true';
+      const connectionTimeout = Number(process.env.EMAIL_CONNECTION_TIMEOUT || '10000');
+      const socketTimeout = Number(process.env.EMAIL_SOCKET_TIMEOUT || '10000');
+      const rawHost = (process.env.EMAIL_HOST || '').trim();
+      let host = rawHost;
+      let hostPortFromHost: number | undefined = undefined;
+      const idx = rawHost.lastIndexOf(':');
+      if (idx > -1) {
+        const maybePort = rawHost.slice(idx + 1);
+        if (/^\d+$/.test(maybePort)) {
+          host = rawHost.slice(0, idx);
+          hostPortFromHost = Number(maybePort);
+        }
+      }
+      const effectivePort = hostPortFromHost ?? port;
+      transporter = nodemailer.createTransport({
+        host,
+        port: effectivePort,
+        secure,
+        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+        ...(secure ? {} : (requireTLS ? { requireTLS: true } : {})),
+        connectionTimeout,
+        socketTimeout,
+        tls: allowSelfSigned ? { rejectUnauthorized: false } : undefined,
+      });
+      await transporter.verify();
+    }
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || '"LLM-Knowledge" <smtp@plusking.ir>',
       to: email,
