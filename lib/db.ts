@@ -12,6 +12,17 @@ declare global {
 }
 
 function buildDataSource() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (databaseUrl) {
+    const useSSL = /sslmode=require/i.test(databaseUrl) || (process.env.DATABASE_SSL || '').toLowerCase() === 'true';
+    return new DataSource({
+      type: 'postgres',
+      url: databaseUrl,
+      entities: [User, Question, Answer, Point],
+      synchronize: true,
+      ssl: useSSL ? { rejectUnauthorized: false } : undefined,
+    });
+  }
   const dbFile = path.join(process.cwd(), 'db.sqlite');
   return new DataSource({
     type: 'sqlite',
