@@ -94,7 +94,7 @@ export async function POST(req: Request) {
     // Fail fast if SMTP is unreachable
     await transporter.verify();
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM || '"LLM-Knowledge" <no-reply@example.com>',
+      from: process.env.EMAIL_FROM || '"LLM-Knowledge" <smtp@plusking.ir>',
       to: email,
       subject: 'Your OTP Code',
       text: `Your OTP code is: ${otp}`,
