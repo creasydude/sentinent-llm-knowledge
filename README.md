@@ -50,9 +50,10 @@ NEXT_PUBLIC_ADMIN_TEST_EMAIL=admin_email@example.com
 NEXT_PUBLIC_ADMIN_TEST_OTP=example_otp_here
 DATABASE_SSL=true
 DATABASE_URL=postgresql://user:password@localhost:5432/mydatabase
-USE_MAILTRAP=true
-MAILTRAP_TOKEN=token
-EMAIL_FROM=email domain
+MAILTRAP_MODE=sending
+MAILTRAP_SENDER_EMAIL=noreply@smtp.plusking.ir
+MAILTRAP_SENDER_NAME=KnowledgeHub
+MAILTRAP_TOKEN=abcd
 ```
 ## Contributing
 
